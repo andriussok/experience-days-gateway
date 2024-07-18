@@ -1,0 +1,19 @@
+# Dependency directories
+node_modules/
+
+# build tools lock
+package-lock.json
+
+# IDE's
+.vscode/
+
+# other
+Thumbs.db
+.DS_Store
+*.DS_Store
+
+# build outputs
+build/
+*.zip
+*.log
+*.map
