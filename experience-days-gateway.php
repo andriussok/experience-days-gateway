@@ -2,7 +2,7 @@
 /*
 Plugin Name: Experience Days Gateway
 Description: A custom WooCommerce payment gateway for handling Experience Days Vouchers.
-Version: 1.0.0
+Version: 1.0.1
 Author: Andrius Sok
 Author URI: andriuss.lt
 License: GPL-3.0-or-later

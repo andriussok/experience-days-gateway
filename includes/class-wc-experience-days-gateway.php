@@ -47,7 +47,7 @@ class Experience_Days_Gateway extends WC_Payment_Gateway {
                 'title'   => __('Enable/Disable', 'experience-days-gateway'),
                 'type'    => 'checkbox',
                 'label'   => __('Enable Experience Days Gateway', 'experience-days-gateway'),
-                'default' => 'yes',
+                'default' => 'no',
             ),
             'title' => array(
                 'title'       => __('Title', 'experience-days-gateway'),
@@ -112,11 +112,32 @@ class Experience_Days_Gateway extends WC_Payment_Gateway {
     }
 
     /**
+     * Process and sanitize voucher code from request
+     */
+    public function get_sanitized_voucher_code() {
+      // Initialize voucher code variable
+      $voucher_code = '';
+
+      // Check if it's a block checkout request and sanitize the input
+      if (isset($_POST['experiencedaysvoucher'])) {
+          $voucher_code = sanitize_text_field($_POST['experiencedaysvoucher']);
+      } else {
+          // Fallback for classic checkout and sanitize the input
+          if (isset($_POST['experience_days_voucher'])) {
+              $voucher_code = sanitize_text_field($_POST['experience_days_voucher']);
+          }
+      }
+
+      return $voucher_code;
+    }
+
+
+    /**
      * Save voucher code and add to customer notes
      */
     public function save_voucher_code($order_id, $voucher_code) {
       if (!empty($voucher_code)) {
-          // store value in metadata;
+          // Store value in metadata
           update_post_meta($order_id, '_experience_days_voucher', $voucher_code);
 
           // Add voucher code to customer notes if not already added
@@ -127,11 +148,12 @@ class Experience_Days_Gateway extends WC_Payment_Gateway {
               if (!empty($existing_note)) {
                   $new_note = "$existing_note -- $new_note";
               }
-              $order->set_customer_note ( $new_note );
+              $order->set_customer_note($new_note);
               $order->save();
           }
       }
     }
+
 
     /**
      * Process payment
@@ -139,16 +161,11 @@ class Experience_Days_Gateway extends WC_Payment_Gateway {
     public function process_payment($order_id) {
         $order = wc_get_order($order_id);
 
-        error_log(json_encode($_POST));
-
-        // Check if it's a block checkout request
-          if (isset($_POST['experiencedaysvoucher'])) {
-            $voucher_code = sanitize_text_field($_POST['experiencedaysvoucher']);
-            $this->save_voucher_code($order_id, $voucher_code);
-        } else {
-            // Fallback for classic checkout
-            $this->save_voucher_code($order_id, $_POST['experience_days_voucher'] ?? '');
-        }
+        // Get sanitized voucher code
+        $voucher_code = $this->get_sanitized_voucher_code();
+        
+        // Save the sanitized voucher code
+        $this->save_voucher_code($order_id, $voucher_code);
 
         // Mark the order as on-hold
         $order->update_status('on-hold', __('Awaiting voucher verification', 'experience-days-gateway'));
